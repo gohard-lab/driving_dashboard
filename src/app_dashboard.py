@@ -9,14 +9,13 @@ from supabase import create_client
 from tracker_web import log_app_usage
 
 # 1. 세션 상태(session_state) 초기화
-# 컴포넌트가 화면에 그려지기 전에 상태값을 미리 준비해 둡니다.
 if "distance" not in st.session_state:
     st.session_state.distance = 0.0
 if "fuel_used" not in st.session_state:
     st.session_state.fuel_used = 0.0
 if "charge_amount" not in st.session_state:
     st.session_state.charge_amount = 0.0
-    
+
 # [캐싱] DB 연결
 @st.cache_resource
 def get_supabase():
@@ -26,14 +25,11 @@ def get_supabase():
 
 # 콤보박스 값 변경 시 실행될 콜백 함수
 def on_expense_category_change():
-    # 현재 선택된 콤보박스 값 가져오기
     selected_category = st.session_state.expense_category
     
-    # 트래커 기록 (어떤 카테고리를 선택했는지 details에 json으로 남김)
     usage_details = json.dumps({"selected_category": selected_category}, ensure_ascii=False)
     log_app_usage("driving_dashboard_web", "category_combobox_changed", details=usage_details)
     
-    # '기타' 항목이 선택되었을 경우 주행거리와 주유량을 0으로 셋팅
     if selected_category == "기타":
         st.session_state.distance = 0.0
         st.session_state.fuel_used = 0.0
@@ -82,7 +78,6 @@ def main():
                                 key="expense_category", 
                                 on_change=on_expense_category_change
                                 )
-        # [핵심 수정] distance 입력창에 key="distance" 추가
         distance = st.number_input("누적/주행 거리 (km)", min_value=0.0, step=10.0, key="distance")
 
         if power_type == "내연기관":
@@ -135,7 +130,6 @@ def main():
     except ValueError:
         default_start = today.replace(year=today.year - 1, day=28)
         
-    # 💡 [핵심 수정] 세션 상태(st.session_state)에 조회 날짜를 안전하게 보관합니다.
     if "search_start" not in st.session_state:
         st.session_state.search_start = default_start
     if "search_end" not in st.session_state:
@@ -143,11 +137,9 @@ def main():
 
     with st.form("search_form"):
         col_f1, col_f2 = st.columns([3, 1])
-        # 달력의 기본값을 세션에 저장된 날짜로 고정합니다.
         selected_dates = col_f1.date_input("🗓️ 조회 기간 설정", [st.session_state.search_start, st.session_state.search_end], max_value=today)
         search_btn = col_f2.form_submit_button("🔍 조회하기")
 
-    # 조회 버튼을 눌렀을 때만 세션 상태의 날짜를 업데이트합니다.
     if search_btn:
         if len(selected_dates) == 2:
             st.session_state.search_start = selected_dates[0]
@@ -158,7 +150,6 @@ def main():
         
         log_app_usage("driving_dashboard_web", "date_searched", {"start": st.session_state.search_start.isoformat(), "end": st.session_state.search_end.isoformat()})
 
-    # DB 조회 시에는 무조건 '세션에 저장된 날짜'를 기준으로 가져옵니다.
     start_date_str = f"{st.session_state.search_start.isoformat()}T00:00:00"
     end_date_str = f"{st.session_state.search_end.isoformat()}T23:59:59"
 
@@ -220,7 +211,7 @@ def main():
             col3.metric("기록 횟수", f"{len(my_car_df)} 회")
             col4.metric("총 유지비", f"{total_cost:,.0f} 원")
 
-            # [그래프 1] 연비/전비 트렌드
+            # 🛠️ [수정됨] 그래프 1: 연비/전비 트렌드 (x축 일자 표시 추가)
             eff_df = my_car_df.dropna(subset=['efficiency'])
             maint_df = my_car_df[my_car_df['category'].isin(['정비/수리', '튜닝/용품'])].copy()
             
@@ -245,16 +236,19 @@ def main():
                 ))
 
             fig_eff.update_layout(
-                title=f"📈 {eff_label} 트렌드 및 차량 이슈", 
+                title=f"📈 {eff_label} 트렌드 및 차량 이슈 (화면 고정)", 
                 xaxis_title="날짜", 
                 yaxis_title=f"{eff_label} ({eff_unit})", 
                 hovermode='closest',
-                xaxis=dict(tickformat="%Y년 %m월") 
+                dragmode=False,
+                # 💡 핵심 수정 부분: "%Y년 %m월" -> "%m월 %d일"로 변경하여 일자까지 나오도록 했습니다.
+                xaxis=dict(tickformat="%m월 %d일", fixedrange=True), 
+                yaxis=dict(fixedrange=True)
             )
-            st.plotly_chart(fig_eff, use_container_width=True)
+            st.plotly_chart(fig_eff, use_container_width=True, config={'displayModeBar': False})
 
-            # [그래프 2] 월별 유지비 차트
-            st.markdown("### 💸 월별 유지비 지출 현황")
+            # 🛠️ 그래프 2: 월별 유지비 차트 (월별 통계이므로 기존 유지)
+            st.markdown("### 💸 월별 유지비 지출 현황 (화면 고정)")
             expense_df = my_car_df[my_car_df['cost'] > 0].copy()
             
             if not expense_df.empty:
@@ -278,12 +272,16 @@ def main():
                     hover_data=['메모']
                 )
                 
-                fig_cost.update_layout(yaxis=dict(tickformat=",", ticksuffix="원"))
-                st.plotly_chart(fig_cost, use_container_width=True)
+                fig_cost.update_layout(
+                    yaxis=dict(tickformat=",", ticksuffix="원", fixedrange=True),
+                    xaxis=dict(fixedrange=True),
+                    dragmode=False
+                )
+                st.plotly_chart(fig_cost, use_container_width=True, config={'displayModeBar': False})
             else:
                 st.info("해당 기간에 금액 기록이 없어 유지비 차트를 그릴 수 없습니다.")
 
-            # 하단 표 출력 (💡 클릭 이벤트 활성화)
+            # 하단 표 출력
             st.markdown(f"### 📝 주행 및 유지비 기록 (클릭하여 관리)")
             st.caption("👇 표에서 수정/삭제하고 싶은 행의 왼쪽 체크박스를 클릭하세요.")
             
