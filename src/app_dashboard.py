@@ -3,7 +3,7 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import json
-from datetime import date
+from datetime import date, timedelta
 import time
 from supabase import create_client
 from tracker_web import log_app_usage
@@ -19,8 +19,8 @@ if "charge_amount" not in st.session_state:
 # [캐싱] DB 연결
 @st.cache_resource
 def get_supabase():
-    url = ""
-    key = ""
+    url = "https://gkzbiacodysnrzbpvavm.supabase.co"
+    key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdremJpYWNvZHlzbnJ6YnB2YXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1NzE2MTgsImV4cCI6MjA4OTE0NzYxOH0.Lv5uVeNZOyo21tgyl2jjGcESoLl_iQTJYp4jdCwuYDU"
     return create_client(url, key)
 
 # 콤보박스 값 변경 시 실행될 콜백 함수
@@ -126,7 +126,10 @@ def main():
     st.markdown("### 🔍 데이터 조회 조건")
     today = date.today()
     try:
-        default_start = today.replace(year=today.year - 1)
+        # default_start = today.replace(year=today.year - 1)
+        # 기본 시작일을 오늘로부터 90일(약 3개월) 전으로 설정합니다. (180일로 하시면 6개월이 됩니다)
+        default_start = today - timedelta(days=90)
+
     except ValueError:
         default_start = today.replace(year=today.year - 1, day=28)
         
