@@ -241,8 +241,7 @@ def main():
                 yaxis_title=f"{eff_label} ({eff_unit})", 
                 hovermode='closest',
                 dragmode=False,
-                # 💡 핵심 수정 부분: "%Y년 %m월" -> "%m월 %d일"로 변경하여 일자까지 나오도록 했습니다.
-                xaxis=dict(tickformat="%m월 %d일", fixedrange=True), 
+                xaxis=dict(tickformat="%Y년 %m월 %d일", fixedrange=True), 
                 yaxis=dict(fixedrange=True)
             )
             st.plotly_chart(fig_eff, use_container_width=True, config={'displayModeBar': False})
