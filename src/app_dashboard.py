@@ -19,8 +19,8 @@ if "charge_amount" not in st.session_state:
 # [캐싱] DB 연결
 @st.cache_resource
 def get_supabase():
-    url = "https://gkzbiacodysnrzbpvavm.supabase.co"
-    key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdremJpYWNvZHlzbnJ6YnB2YXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1NzE2MTgsImV4cCI6MjA4OTE0NzYxOH0.Lv5uVeNZOyo21tgyl2jjGcESoLl_iQTJYp4jdCwuYDU"
+    url = ""
+    key = ""
     return create_client(url, key)
 
 # 콤보박스 값 변경 시 실행될 콜백 함수
