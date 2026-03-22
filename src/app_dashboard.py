@@ -10,8 +10,8 @@ from tracker_web import log_app_usage
 # [캐싱] DB 연결
 @st.cache_resource
 def get_supabase():
-    url = "https://gkzbiacodysnrzbpvavm.supabase.co"
-    key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdremJpYWNvZHlzbnJ6YnB2YXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1NzE2MTgsImV4cCI6MjA4OTE0NzYxOH0.Lv5uVeNZOyo21tgyl2jjGcESoLl_iQTJYp4jdCwuYDU"
+    url = "https://cxraxnloueqcwmdlbvmh.supabase.co"
+    key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4cmF4bmxvdWVxY3dtZGxidm1oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNDkyNTYsImV4cCI6MjA4OTcyNTI1Nn0.aYBBmXDcwH9oEm-y4A5ltk8N63lcA38UIEl4A5whZi8"
     return create_client(url, key)
 
 def main():
