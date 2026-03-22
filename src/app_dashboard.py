@@ -2,17 +2,42 @@ import streamlit as st
 import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
+import json
 from datetime import date
 import time
 from supabase import create_client
 from tracker_web import log_app_usage
 
+# 1. 세션 상태(session_state) 초기화
+# 컴포넌트가 화면에 그려지기 전에 상태값을 미리 준비해 둡니다.
+if "distance" not in st.session_state:
+    st.session_state.distance = 0.0
+if "fuel_used" not in st.session_state:
+    st.session_state.fuel_used = 0.0
+if "charge_amount" not in st.session_state:
+    st.session_state.charge_amount = 0.0
+    
 # [캐싱] DB 연결
 @st.cache_resource
 def get_supabase():
     url = "https://cxraxnloueqcwmdlbvmh.supabase.co"
     key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImN4cmF4bmxvdWVxY3dtZGxidm1oIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQxNDkyNTYsImV4cCI6MjA4OTcyNTI1Nn0.aYBBmXDcwH9oEm-y4A5ltk8N63lcA38UIEl4A5whZi8"
     return create_client(url, key)
+
+# 콤보박스 값 변경 시 실행될 콜백 함수
+def on_expense_category_change():
+    # 현재 선택된 콤보박스 값 가져오기
+    selected_category = st.session_state.expense_category
+    
+    # 트래커 기록 (어떤 카테고리를 선택했는지 details에 json으로 남김)
+    usage_details = json.dumps({"selected_category": selected_category}, ensure_ascii=False)
+    log_app_usage("driving_dashboard_web", "category_combobox_changed", details=usage_details)
+    
+    # '기타' 항목이 선택되었을 경우 주행거리와 주유량을 0으로 셋팅
+    if selected_category == "기타":
+        st.session_state.distance = 0.0
+        st.session_state.fuel_used = 0.0
+        st.session_state.charge_amount = 0.0
 
 def main():
     st.set_page_config(page_title="나만의 드라이빙 대시보드", page_icon="🏎️", layout="wide")
@@ -52,15 +77,20 @@ def main():
 
         drive_date = st.date_input("주행 날짜", date.today())
         power_type = st.radio("동력원", ["내연기관", "전기차"], horizontal=True)
-        category = st.selectbox("지출 분류", ["주유/충전", "정비/수리", "세차", "튜닝/용품", "기타"])
-        distance = st.number_input("누적/주행 거리 (km)", min_value=0.0, step=10.0)
-        
+        category = st.selectbox("지출 분류", 
+                                ["주유/충전", "정비/수리", "세차", "튜닝/용품", "기타"], 
+                                key="expense_category", 
+                                on_change=on_expense_category_change
+                                )
+        # [핵심 수정] distance 입력창에 key="distance" 추가
+        distance = st.number_input("누적/주행 거리 (km)", min_value=0.0, step=10.0, key="distance")
+
         if power_type == "내연기관":
-            fuel_used = st.number_input("주유량 (L)", min_value=0.0, step=5.0)
+            fuel_used = st.number_input("주유량 (L)", min_value=0.0, step=5.0, key="fuel_used")
             charge_amount = 0.0
         else:
             fuel_used = 0.0
-            charge_amount = st.number_input("충전량 (kWh)", min_value=0.0, step=5.0)
+            charge_amount = st.number_input("충전량 (kWh)", min_value=0.0, step=5.0, key="charge_amount")
             
         cost = st.number_input("금액 (원)", min_value=0, step=1000)
         
