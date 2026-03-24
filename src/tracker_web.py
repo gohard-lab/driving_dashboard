@@ -1,3 +1,4 @@
+import uuid
 import streamlit as st
 import requests
 from supabase import create_client, Client
@@ -28,6 +29,15 @@ def get_real_client_ip():
     except:
         return "Unknown"
 
+
+# 1. 💡 세션 ID를 발급/조회하는 함수 추가 (log_app_usage 함수 위쪽에 배치)
+def get_or_create_session_id():
+    if 'session_id' not in st.session_state:
+        # 접속 시 최초 1회만 고유 ID 생성 (예: 'a1b2c3d4...')
+        st.session_state['session_id'] = uuid.uuid4().hex
+    return st.session_state['session_id']
+
+
 def log_app_usage(app_name="unknown_app", action="page_view", details=None):
     real_ip = get_real_client_ip()
     
@@ -47,11 +57,14 @@ def log_app_usage(app_name="unknown_app", action="page_view", details=None):
                 loc_data = res.json() if res.status_code == 200 else {}
             except: pass
 
+        current_session = get_or_create_session_id()
+
         user_agent = st.context.headers.get("User-Agent", "Unknown") if hasattr(st, "context") else "Unknown"
         kst = timezone(timedelta(hours=9))
         korea_time = datetime.now(kst).strftime("%Y-%m-%d %H:%M:%S")
 
         log_data = {
+            "session_id": current_session,
             "app_name": app_name,
             "action": action,
             "timestamp": korea_time,
