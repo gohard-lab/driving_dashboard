@@ -6,34 +6,12 @@ import os
 from supabase import create_client, Client
 from streamlit_javascript import st_javascript
 from datetime import datetime, timezone, timedelta
-from dotenv import load_dotenv
-
-
-def resource_path(relative_path):
-    try:
-        base_path = sys._MEIPASS
-    except Exception:
-        base_path = os.path.abspath(".")
-    return os.path.join(base_path, relative_path)
-
-# 1. 파일 위치(src) 기준으로 한 칸 위(..)에 있는 .env 파일의 정확한 경로
-current_dir = os.path.dirname(os.path.abspath(__file__))
-env_path = os.path.join(current_dir, "..", ".env")
-
-# 2. 찾은 경로의 .env 파일을 확실하게 읽어옴.
-load_dotenv(dotenv_path=env_path, override=True)
 
 @st.cache_resource
 def get_supabase_client():
-    url = os.getenv("SUPABASE_URL")
-    key = os.getenv("SUPABASE_KEY")
-
-    # st.info(f"🔍 3. 읽어온 URL 값: {url}")
-
-    if not url or not key:
-        st.error("Supabase 주소나 키를 찾을 수 없습니다. .env 파일을 확인해 주세요.")
-        return None
-    
+    # 🚨 나의 supabase 주소와 Anon 키
+    url = "https://gkzbiacodysnrzbpvavm.supabase.co"
+    key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdremJpYWNvZHlzbnJ6YnB2YXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1NzE2MTgsImV4cCI6MjA4OTE0NzYxOH0.Lv5uVeNZOyo21tgyl2jjGcESoLl_iQTJYp4jdCwuYDU"
     return create_client(url, key)
 
 

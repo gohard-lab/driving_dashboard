@@ -3,9 +3,16 @@ import pandas as pd
 import plotly.express as px
 import plotly.graph_objects as go
 import json
-from datetime import date, timedelta
 import time
-from tracker_web import log_app_usage, get_supabase_client
+import os
+from datetime import date, timedelta
+from tracker_web import log_app_usage
+from dotenv import load_dotenv
+from supabase import create_client
+
+current_dir = os.path.dirname(os.path.abspath(__file__))
+env_path = os.path.join(current_dir, "..", ".env")
+load_dotenv(dotenv_path=env_path, override=True)
 
 # 1. 세션 상태(session_state) 초기화
 if "distance" not in st.session_state:
@@ -15,6 +22,16 @@ if "fuel_used" not in st.session_state:
 if "charge_amount" not in st.session_state:
     st.session_state.charge_amount = 0.0
 
+@st.cache_resource
+def get_viewer_supabase():
+    url = os.getenv("SUPABASE_URL")
+    key = os.getenv("SUPABASE_KEY")
+    
+    if not url or not key:
+        st.error("💡 본인의 Supabase 주소와 키를 .env 파일에 세팅해 주세요!")
+        st.stop()
+        
+    return create_client(url, key)
 
 # 콤보박스 값 변경 시 실행될 콜백 함수
 def on_expense_category_change():
@@ -36,8 +53,9 @@ def main():
             st.session_state.is_opened = True
 
     st.title("🏎️ 내 차 주행 데이터 분석 대시보드")
-# 👇 tracker_web.py가 읽어온 DB 연결
-    supabase = get_supabase_client()
+
+    # DB와 연결
+    supabase = get_viewer_supabase()
 
     # (안전장치) DB 연결에 실패하면 화면을 멈춤
     if not supabase:
