@@ -5,8 +5,7 @@ import plotly.graph_objects as go
 import json
 from datetime import date, timedelta
 import time
-from supabase import create_client
-from tracker_web import log_app_usage
+from tracker_web import log_app_usage, get_supabase_client
 
 # 1. 세션 상태(session_state) 초기화
 if "distance" not in st.session_state:
@@ -16,12 +15,6 @@ if "fuel_used" not in st.session_state:
 if "charge_amount" not in st.session_state:
     st.session_state.charge_amount = 0.0
 
-# [캐싱] DB 연결
-@st.cache_resource
-def get_supabase():
-    url = ""
-    key = ""
-    return create_client(url, key)
 
 # 콤보박스 값 변경 시 실행될 콜백 함수
 def on_expense_category_change():
@@ -43,7 +36,12 @@ def main():
             st.session_state.is_opened = True
 
     st.title("🏎️ 내 차 주행 데이터 분석 대시보드")
-    supabase = get_supabase()
+# 👇 tracker_web.py가 읽어온 DB 연결
+    supabase = get_supabase_client()
+
+    # (안전장치) DB 연결에 실패하면 화면을 멈춤
+    if not supabase:
+        st.stop()
 
     # --- 1.5. DB에서 등록된 차량 목록 동적으로 불러오기 ---
     try:
