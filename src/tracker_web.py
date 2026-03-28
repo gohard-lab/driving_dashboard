@@ -65,7 +65,9 @@ def log_app_usage(app_name="unknown_app", action="page_view", details=None):
 
         user_agent = st.context.headers.get("User-Agent", "Unknown") if hasattr(st, "context") else "Unknown"
         kst = timezone(timedelta(hours=9))
-        korea_time = datetime.now(kst).strftime("%Y-%m-%d %H:%M:%S")
+        # korea_time = datetime.now(kst).strftime("%Y-%m-%d %H:%M:%S")
+        # ✅ 수정 코드: +09:00 꼬리표가 자동으로 붙는 표준 포맷
+        korea_time = datetime.now(kst).isoformat()
 
         log_data = {
             "session_id": current_session,
