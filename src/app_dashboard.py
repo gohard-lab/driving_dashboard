@@ -49,7 +49,7 @@ def on_expense_category_change():
 @st.dialog("⭐ Support Polymath Developer Automation Tool")
 def show_star_popup_web():
     # 팝업 노출 트래커 기록
-    log_app_usage("simple_button_app", "star_prompt_displayed", details={"ui": "streamlit_dialog"})
+    log_app_usage("driving_dashboard_web", "star_prompt_displayed", details={"ui": "streamlit_dialog"})
     
     st.warning(
         "💡 유용하게 사용하셨나요? 소스코드만 날름 가져가는 분들이 많습니다. "
@@ -58,7 +58,7 @@ def show_star_popup_web():
     )
     
     # 깃허브 Star 유도 버튼
-    st.link_button("👉 깃허브로 이동하여 Star 누르기", "https://github.com/gohard-lab/YOUR_REPO_NAME")
+    st.link_button("👉 깃허브로 이동하여 Star 누르기", "https://github.com/gohard-lab/driving_dashboard")
 
 def main():
     st.set_page_config(page_title="나만의 드라이빙 대시보드", page_icon="🏎️", layout="wide")
