@@ -316,8 +316,9 @@ def main():
                 st.info("해당 기간에 금액 기록이 없어 유지비 차트를 그릴 수 없습니다.")
 
             # 하단 표 출력
+            # ... (기존 하단 표 출력 텍스트 부분) ...
             st.markdown(f"### 📝 주행 및 유지비 기록 (클릭하여 관리)")
-            st.caption("👇 표에서 수정/삭제하고 싶은 행의 왼쪽 체크박스를 클릭하세요.")
+            st.caption("👇 표 왼쪽의 체크박스를 눌러 항목을 선택하세요. 여러 개를 선택해 일괄 삭제도 가능합니다.")
             
             display_df = my_car_df[['drive_date', 'power_type', 'category', 'distance', 'fuel_used', 'charge_amount', 'efficiency', 'cost', 'memo']].copy()
             display_df.columns = ['날짜', '동력원', '분류', '주행거리(km)', '주유량(L)', '충전량(kWh)', f'효율', '금액(원)', '메모']
@@ -326,17 +327,20 @@ def main():
             selection_event = st.dataframe(
                 display_df.style.format({'주행거리(km)': '{:.1f}', '주유량(L)': '{:.1f}', '충전량(kWh)': '{:.1f}', '효율': '{:.2f}', '금액(원)': '{:,.0f}'}), 
                 hide_index=True,
-                selection_mode="single-row",
+                selection_mode="multi-row", # 👈 'single-row'를 'multi-row'로 변경 (체크박스 생성)
                 on_select="rerun"
             )
             
-            # --- 5. 기록 수정 및 삭제 ---
+            # --- 5. 기록 수정 및 다중 삭제 ---
             st.divider()
             st.markdown("### 🛠️ 선택된 기록 관리")
             
             selected_rows = selection_event.selection.rows
             
-            if len(selected_rows) > 0:
+            if len(selected_rows) == 1:
+                # ----------------------------------------------------
+                # [단일 선택] 1개만 체크했을 때는 기존처럼 수정 및 개별 삭제 폼 출력
+                # ----------------------------------------------------
                 selected_idx = selected_rows[0]
                 selected_row = my_car_df.iloc[selected_idx]
                 rec_id = int(selected_row['id'])
@@ -404,12 +408,41 @@ def main():
                                 st.error(f"삭제 에러: {e}")
                         else:
                             st.error("삭제를 원하시면 '영구 삭제 동의' 체크박스를 먼저 선택해 주세요.")
+
+            elif len(selected_rows) > 1:
+                # ----------------------------------------------------
+                # [다중 선택] 여러 개를 체크했을 때는 일괄 삭제 기능만 제공
+                # ----------------------------------------------------
+                st.warning(f"총 **{len(selected_rows)}개**의 기록이 선택되었습니다. 여러 항목 선택 시 일괄 삭제만 가능합니다.")
+                
+                with st.form(key="bulk_delete_form"):
+                    confirm_bulk_delete = st.checkbox("🚨 선택한 모든 기록을 영구 삭제하는 것에 동의합니다.")
+                    btn_bulk_delete = st.form_submit_button("🗑️ 선택 항목 일괄 삭제", type="primary")
+                    
+                    if btn_bulk_delete:
+                        if confirm_bulk_delete:
+                            try:
+                                # 선택된 행들의 id만 추출하여 리스트로 만듦
+                                selected_ids = my_car_df.iloc[selected_rows]['id'].tolist()
+                                
+                                # Supabase in_() 메서드를 활용한 일괄 삭제
+                                supabase.table("driving_records").delete().in_("id", selected_ids).execute()
+                                log_app_usage("driving_dashboard_web", "records_bulk_deleted", {"car_model": final_car_model, "count": len(selected_ids)})
+                                st.success(f"{len(selected_ids)}개의 기록이 일괄 삭제되었습니다.")
+                                time.sleep(1)
+                                st.rerun()
+                            except Exception as e:
+                                st.error(f"일괄 삭제 에러: {e}")
+                        else:
+                            st.error("삭제를 원하시면 '영구 삭제 동의' 체크박스를 먼저 선택해 주세요.")
             else:
-                st.info("👆 위 주행 기록 표에서 수정/삭제하고 싶은 행을 클릭해 주세요.")
+                st.info("👆 위 주행 기록 표에서 체크박스를 클릭해 항목을 선택해 주세요.")
         else:
             st.info(f"선택하신 기간 내에 [{final_car_model}]의 주행 기록이 없습니다.")
     else:
         st.info("데이터베이스에 등록된 기록이 없습니다.")
+
+# (이하 기존 함수들 유지)
 
 def total_cost_to_hangul(cost):
     if cost == 0: return "0원"
