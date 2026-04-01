@@ -61,10 +61,10 @@ def show_star_popup_web():
     st.link_button("👉 깃허브로 이동하여 Star 누르기", "https://github.com/gohard-lab/driving_dashboard")
 
 def main():
-    st.set_page_config(page_title="나만의 드라이빙 대시보드", page_icon="🏎️", layout="wide")
+    st.set_page_config(page_title="Cheiri's 드라이빙 대시보드", page_icon="🏎️", layout="wide")
     
     if "is_opened" not in st.session_state:
-        show_star_popup_web()
+        # show_star_popup_web()
         if log_app_usage("driving_dashboard_web", "app_opened"):
             st.session_state.is_opened = True
 
