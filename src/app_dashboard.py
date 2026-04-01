@@ -7,12 +7,10 @@ import time
 import os
 from datetime import date, timedelta
 from tracker_web import log_app_usage
-from dotenv import load_dotenv
 from supabase import create_client
 
 current_dir = os.path.dirname(os.path.abspath(__file__))
 env_path = os.path.join(current_dir, "..", ".env")
-load_dotenv(dotenv_path=env_path, override=True)
 
 # 1. 세션 상태(session_state) 초기화
 if "distance" not in st.session_state:
