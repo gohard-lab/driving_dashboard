@@ -6,11 +6,8 @@ import json
 import time
 import os
 from datetime import date, timedelta
-from tracker_web import log_app_usage
+# from tracker_web import log_app_usage
 from supabase import create_client
-
-current_dir = os.path.dirname(os.path.abspath(__file__))
-env_path = os.path.join(current_dir, "..", ".env")
 
 # 1. 세션 상태(session_state) 초기화
 if "distance" not in st.session_state:
@@ -20,13 +17,12 @@ if "fuel_used" not in st.session_state:
 if "charge_amount" not in st.session_state:
     st.session_state.charge_amount = 0.0
 
-@st.cache_resource
 def get_viewer_supabase():
-    url = os.getenv("SUPABASE_URL")
-    key = os.getenv("SUPABASE_KEY")
+    url = ""
+    key = ""
     
     if not url or not key:
-        st.error("💡 본인의 Supabase 주소와 키를 .env 파일에 세팅해 주세요!")
+        st.error("💡 본인의 Supabase 주소와 키를 세팅해 주세요!")
         st.stop()
         
     return create_client(url, key)
@@ -36,7 +32,7 @@ def on_expense_category_change():
     selected_category = st.session_state.expense_category
     
     usage_details = json.dumps({"selected_category": selected_category}, ensure_ascii=False)
-    log_app_usage("driving_dashboard_web", "category_combobox_changed", details=usage_details)
+    # log_app_usage("driving_dashboard_web", "category_combobox_changed", details=usage_details)
     
     if selected_category == "기타":
         st.session_state.distance = 0.0
@@ -47,7 +43,7 @@ def on_expense_category_change():
 @st.dialog("⭐ Support Polymath Developer Automation Tool")
 def show_star_popup_web():
     # 팝업 노출 트래커 기록
-    log_app_usage("driving_dashboard_web", "star_prompt_displayed", details={"ui": "streamlit_dialog"})
+    # log_app_usage("driving_dashboard_web", "star_prompt_displayed", details={"ui": "streamlit_dialog"})
     
     st.warning(
         "💡 유용하게 사용하셨나요? 소스코드만 날름 가져가는 분들이 많습니다. "
@@ -61,12 +57,12 @@ def show_star_popup_web():
 def main():
     st.set_page_config(page_title="Cheiri's 드라이빙 대시보드", page_icon="🏎️", layout="wide")
     
-    if "is_opened" not in st.session_state:
-        # show_star_popup_web()
-        if log_app_usage("driving_dashboard_web", "app_opened"):
-            st.session_state.is_opened = True
+    # if "is_opened" not in st.session_state:
+    #     # show_star_popup_web()
+    #     if log_app_usage("driving_dashboard_web", "app_opened"):
+    #         st.session_state.is_opened = True
 
-    st.title("🏎️ 내 차 주행 데이터 분석 대시보드")
+    # st.title("🏎️ 내 차 주행 데이터 분석 대시보드")
 
     # DB와 연결
     supabase = get_viewer_supabase()
@@ -141,7 +137,7 @@ def main():
             }
             try:
                 supabase.table("driving_records").insert(record_data, returning="minimal").execute()
-                log_app_usage("driving_dashboard_web", "record_added", {"car_model": final_car_model, "category": category, "action": "insert"})
+                # log_app_usage("driving_dashboard_web", "record_added", {"car_model": final_car_model, "category": category, "action": "insert"})
                 st.success(f"[{final_car_model}] {category} 기록이 저장되었습니다!")
                 time.sleep(1)
                 st.rerun()
@@ -181,7 +177,7 @@ def main():
             st.session_state.search_start = selected_dates[0]
             st.session_state.search_end = selected_dates[0]
         
-        log_app_usage("driving_dashboard_web", "date_searched", {"start": st.session_state.search_start.isoformat(), "end": st.session_state.search_end.isoformat()})
+        # log_app_usage("driving_dashboard_web", "date_searched", {"start": st.session_state.search_start.isoformat(), "end": st.session_state.search_end.isoformat()})
 
     start_date_str = f"{st.session_state.search_start.isoformat()}T00:00:00"
     end_date_str = f"{st.session_state.search_end.isoformat()}T23:59:59"
@@ -383,7 +379,7 @@ def main():
                         }
                         try:
                             supabase.table("driving_records").update(update_data).eq("id", rec_id).execute()
-                            log_app_usage("driving_dashboard_web", "record_edited", {"car_model": final_car_model, "action": "update", "record_id": rec_id})
+                            # log_app_usage("driving_dashboard_web", "record_edited", {"car_model": final_car_model, "action": "update", "record_id": rec_id})
                             st.success("기록이 성공적으로 수정되었습니다!")
                             time.sleep(1)
                             st.rerun()
@@ -394,7 +390,7 @@ def main():
                         if confirm_delete:
                             try:
                                 supabase.table("driving_records").delete().eq("id", rec_id).execute()
-                                log_app_usage("driving_dashboard_web", "record_deleted", {"car_model": final_car_model, "action": "delete", "record_id": rec_id})
+                                # log_app_usage("driving_dashboard_web", "record_deleted", {"car_model": final_car_model, "action": "delete", "record_id": rec_id})
                                 st.warning("선택한 기록이 영구적으로 삭제되었습니다.")
                                 time.sleep(1)
                                 st.rerun()

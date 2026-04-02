@@ -7,8 +7,8 @@ from datetime import datetime, timezone, timedelta
 
 @st.cache_resource
 def get_supabase_client():
-    url = "https://gkzbiacodysnrzbpvavm.supabase.co"
-    key = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdremJpYWNvZHlzbnJ6YnB2YXZtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzM1NzE2MTgsImV4cCI6MjA4OTE0NzYxOH0.Lv5uVeNZOyo21tgyl2jjGcESoLl_iQTJYp4jdCwuYDU"
+    url = ""
+    key = ""
     return create_client(url, key)
 
 def get_real_client_ip():
