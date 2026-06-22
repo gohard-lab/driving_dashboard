@@ -6,7 +6,7 @@ import json
 import time
 import os
 from datetime import date, timedelta
-# from tracker_web import log_app_usage
+# from tracker_hub import log_app_usage
 from supabase import create_client
 
 # 1. 세션 상태(session_state) 초기화
